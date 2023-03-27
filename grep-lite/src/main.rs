@@ -1,5 +1,8 @@
 use clap::Parser;
 use regex::Regex;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
 
 #[derive(Parser)]
 #[command(name = "Grep Lite")]
@@ -9,24 +12,41 @@ use regex::Regex;
 struct Args {
     /// The pattern to search for
     pattern: String,
+
+    /// a file to search
+    #[arg(short, long)]
+    file: String,
+}
+
+fn find_in_file(file: &File, regexp: &Regex) {
+    let reader = BufReader::new(file);
+
+    for (index, line) in reader.lines().enumerate() {
+        let extracted_line = line.unwrap();
+        let contains_substring = regexp.find(&extracted_line);
+
+        match contains_substring {
+            Some(_) => println!("{}: {}", index, extracted_line.trim()),
+            None => (),
+        }
+    }
+}
+
+fn print_file_error(error: &std::io::Error) {
+    match error.kind() {
+        std::io::ErrorKind::NotFound => println!("File not found!"),
+        _ => println!("Error: {:?}", error.kind()),
+    }
 }
 
 fn main() {
     let cli = Args::parse();
 
     let regexp = Regex::new(cli.pattern.as_str()).unwrap();
-    let quote = "\
-    Every face, every shop, bedroom windor, public-house, and
-    dark square is a picture feverishly turned--in search of what?
-    It is the same with books.
-    What do we seek through millions of pages?";
+    let file_input = cli.file.as_str();
 
-    for (index, line) in quote.lines().enumerate() {
-        let contains_substring = regexp.find(line);
-
-        match contains_substring {
-            Some(_) => println!("{}: {}", index, line.trim()),
-            None => (),
-        }
+    match File::open(file_input) {
+        Ok(file) => find_in_file(&file, &regexp),
+        Err(err) => print_file_error(&err),
     }
 }
