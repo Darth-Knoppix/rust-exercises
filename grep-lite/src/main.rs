@@ -4,12 +4,11 @@ fn main() {
     Every face, every shop, bedroom windor, public-house, and
     dark square is a picture feverishly turned--in search of what?
     It is the same with books.
-    What do we seek through millions of pages?
-    ";
+    What do we seek through millions of pages?";
 
-    for line in quote.lines() {
+    for (index, line) in quote.lines().enumerate() {
         if line.contains(query) {
-            println!("{}", line)
+            println!("{}: {}", index + 1, line.trim())
         }
     }
 }
